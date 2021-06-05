@@ -1,4 +1,7 @@
 Player:
+	ModularBot@SimonAI:
+		Name: SAImon
+		Type: rush
 	ModularBot@RushAI:
 		Name: Rush AI
 		Type: rush
@@ -78,6 +81,12 @@ Player:
 		RequiresCondition: enable-rush-ai || enable-normal-ai || enable-turtle-ai || enable-naval-ai
 		HarvesterTypes: harv
 		RefineryTypes: proc
+	MineLayerBotModule@rush:
+		RequiresCondition: enable-rush-ai
+		ServiceDepotTypes: fix	# don't technically need this, since it is configured under mnly.Rearmable.RearmActors in vehicles.yaml
+		FactoryTypes: weap # not needed anymore, we signal IBotRequestUnitProduction that we want to produce mnly
+		MineLayerTypes: mnly
+		MineLayerBuildLimit: 5
 	BaseBuilderBotModule@rush:
 		RequiresCondition: enable-rush-ai
 		MinimumExcessPower: 60
@@ -274,7 +283,7 @@ Player:
 	SquadManagerBotModule@rush:
 		RequiresCondition: enable-rush-ai
 		SquadSize: 20
-		ExcludeFromSquadsTypes: harv, mcv, dog
+		ExcludeFromSquadsTypes: harv, mcv, dog, mnly
 		NavalUnitsTypes: ss,msub,dd,ca,lst,pt
 		ConstructionYardTypes: fact
 	McvManagerBotModule:
