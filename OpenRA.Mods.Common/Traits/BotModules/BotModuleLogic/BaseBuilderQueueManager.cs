@@ -183,6 +183,7 @@ namespace OpenRA.Mods.Common.Traits
 				{
 					failCount = 0;
 
+					AIUtils.BotDebug("AI: {0} building a {1}, but if I was Simon I'd be laying mines right now".F(player, currentBuilding.Item));
 					bot.QueueOrder(new Order(orderString, player.PlayerActor, Target.FromCell(world, location.Value), false)
 					{
 						// Building to place
