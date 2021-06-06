@@ -38,7 +38,7 @@ namespace OpenRA.Mods.Common.Traits
 		readonly World world;
 		readonly Player player;
 
-		private DebugGuage mineLayerGuage;
+		private DebugGuage mineLayerGuage, idleGuage;
 
 		private int tickCount;
 
@@ -56,6 +56,7 @@ namespace OpenRA.Mods.Common.Traits
 			AIUtils.BotDebug("AI: {0} MineLayerBotModule was created".F(player));
 			requestUnitProduction = self.TraitsImplementing<IBotRequestUnitProduction>().ToArray();
 			mineLayerGuage = new DebugGuage("AI: {0} mnly count".F(player));
+			idleGuage = new DebugGuage("{0} mnly idle count".F(player));
 		}
 
 		protected override void TraitEnabled(Actor self)
@@ -94,15 +95,20 @@ namespace OpenRA.Mods.Common.Traits
 				return;
 			}
 
-			var currentBuildings = world.ActorsHavingTrait<Building>().Where(a => a.Owner == player);
-			var serviceDepots = currentBuildings.Where(a => Info.ServiceDepotTypes.Contains(a.Info.Name));
+			var idleLayers = mineLayers.Where(a => a.CurrentActivity == null);
+			idleGuage.Update(idleLayers.Count());
 
-			// Calculate deploy pattern based on convex hull of base + ore patch
+			// TODO Calculate deploy pattern based on convex hull of base + ore patch
+			foreach (var layer in idleLayers)
+			{
+				QueueLayMinesOrder(bot, layer, new CPos(36, 34), new CPos(42, 34));
+			}
+		}
 
-			// Send empty Mine Layers back to Service Depot
-			// Send loaded Mine Layers to deploy pattern
-			// A Mine Layer with != 0 mines should be routed to lay a mine, unless it is at the Service Depot
-			// If a Mine Layer is at the Service Depot, it must be full before it is directed to lay mines
+		private void QueueLayMinesOrder(IBot bot, Actor minelayer, CPos from, CPos to)
+		{
+			bot.QueueOrder(new Order("BeginMinefield", minelayer, Target.FromCell(world, from), false));
+			bot.QueueOrder(new Order("PlaceMinefield", minelayer, Target.FromCell(world, to), false));
 		}
 
 		private HashSet<string> logged = new HashSet<string>();
