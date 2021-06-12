@@ -13,4 +13,7 @@
     <PackageReference Include="NUnit.Console" Version="3.13.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.0" />
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="OpenRA.Mods.Common\ConvexHullTest.cs" />
+  </ItemGroup>
 </Project>
