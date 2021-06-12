@@ -48,6 +48,44 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			}
 		}
 
+		[TestCase(TestName = "Triangle with verticies in both quadrants when sorting.")]
+		public void TriangleVerticesBothQuadrants()
+		{
+			var points = new CPos[3];
+			points[0] = new CPos(-1, 1);
+			points[1] = new CPos(0, -1);
+			points[2] = new CPos(1, 1);
+			var result = GrahamScan.ConvexHull(points);
+			if (!result.SequenceEqual(new[]
+			{
+					new CPos(0, -1),
+					new CPos(1, 1),
+					new CPos(-1, 1)
+			}))
+			{
+				Assert.Fail("points did not match, got " + string.Join(", ", result));
+			}
+		}
+
+		[TestCase(TestName = "Triangle with verticies in the left quadrant when sorting.")]
+		public void TriangleVerticesLeftQuadrant()
+		{
+			var points = new CPos[3];
+			points[0] = new CPos(-2, 1);
+			points[1] = new CPos(0, -1);
+			points[2] = new CPos(-1, 1);
+			var result = GrahamScan.ConvexHull(points);
+			if (!result.SequenceEqual(new[]
+			{
+					new CPos(0, -1),
+					new CPos(-1, 1),
+					new CPos(-2, 1)
+			}))
+			{
+				Assert.Fail("points did not match, got " + string.Join(", ", result));
+			}
+		}
+
 		[TestCase(TestName = "SortFunc1")]
 		public void SortFunc1()
 		{
