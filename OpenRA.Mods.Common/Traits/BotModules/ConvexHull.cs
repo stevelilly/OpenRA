@@ -68,7 +68,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 			int sb = Math.Sign(bv.X);
 			if (sa != sb)
 				return Math.Sign(bv.X - av.X);
-			return sa * Math.Sign(bv.X * av.Y - av.X * bv.Y);
+			return Math.Sign(bv.X * av.Y - av.X * bv.Y);
 		}
 	}
 }
