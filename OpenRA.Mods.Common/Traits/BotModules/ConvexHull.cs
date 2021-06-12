@@ -8,19 +8,29 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 		public static CPos[] ConvexHull(CPos[] points)
 		{
 			// Find the point P0 with the lowest Y, then by lowest X
-			int p0x = points[0].X, p0y = points[0].Y;
+			int minIndex = 0;
+			CPos minPoint = points[0];
 
-			foreach (CPos point in points)
+			for (int i = 1; i < points.Length; i++)
 			{
-				if (point.Y < p0y || (point.Y == p0y && point.X < p0x))
+				CPos point = points[i];
+				if (point.Y < minPoint.Y || (point.Y == minPoint.Y && point.X < minPoint.X))
 				{
-					p0x = point.X;
-					p0y = point.Y;
+					minPoint = point;
+					minIndex = i;
 				}
 			}
 
-			// Sort points by polar angle with P0
-			Array.Sort(points, new CompareAngleFromPoint(new CPos(p0x, p0y)));
+			// Swap so that P0 is at the start of the array
+			if (minIndex != 0)
+			{
+				CPos tmp = points[0];
+				points[0] = points[minIndex];
+				points[minIndex] = tmp;
+			}
+
+			// Sort remaining points by polar angle with P0
+			Array.Sort(points, 1, points.Length - 1, new CompareAngleFromPoint(minPoint));
 
 			CPos[] stack = new CPos[points.Length];
 			int topOfStack = -1;
@@ -31,7 +41,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				stack[++topOfStack] = point;
 			}
 
-			Array.Resize(ref stack, topOfStack);
+			Array.Resize(ref stack, topOfStack + 1);
 			return stack;
 		}
 
