@@ -7,7 +7,7 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 	[TestFixture]
 	class ConvexHullTest
 	{
-		[TestCase(TestName = "Convex hull of the unit square should output in clockwise order.")]
+		[TestCase(TestName = "Convex hull of the unit square should output in counter-clockwise order from the bottom-left most point.")]
 		public void UnitSquare()
 		{
 			var points = new CPos[4];
@@ -18,10 +18,10 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			var result = GrahamScan.ConvexHull(points);
 			if (!result.SequenceEqual(new[]
 			{
+				new CPos(0, 0),
 				new CPos(1, 0),
 				new CPos(1, 1),
-				new CPos(0, 1),
-				new CPos(0, 0)
+				new CPos(0, 1)
 			}))
 			{
 				Assert.Fail("points did not match, got " + string.Join(", ", result));
@@ -39,9 +39,9 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			var result = GrahamScan.ConvexHull(points);
 			if (!result.SequenceEqual(new[]
 			{
-					new CPos(0, 4),
 					new CPos(0, 0),
-					new CPos(4, 0)
+					new CPos(3, 0),
+					new CPos(0, 3)
 			}))
 			{
 				Assert.Fail("points did not match, got " + string.Join(", ", result));
