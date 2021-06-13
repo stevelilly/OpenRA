@@ -68,9 +68,12 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 			int sb = Math.Sign(bv.X);
 			if (sa != sb)
 				return Math.Sign(bv.X - av.X);
+			int byAngle = Math.Sign(bv.X * av.Y - av.X * bv.Y);
+			if (byAngle != 0) return byAngle;
 
-			// FIXME, if this is 0, the points are colinear, tie-break based on distance (shortest first)
-			return Math.Sign(bv.X * av.Y - av.X * bv.Y);
+			// the points are colinear, tie-break based on distance (shortest first)
+			// it suffices to sort by X or Y (either could be 0). Since they have the same gradient we can sort by X+Y
+			return Math.Sign(av.X + av.Y - bv.X - bv.Y);
 		}
 	}
 }
