@@ -161,5 +161,23 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			int result = compare.Compare(new CPos(1, 1), new CPos(2, 2));
 			Assert.AreEqual(-1, result);
 		}
+
+		[TestCase(TestName = "SortFuncColinearNegative")]
+		public void SortFuncColinearNegative()
+		{
+			var compare = new CompareAngleFromPoint(new CPos(0, 0));
+
+			int result = compare.Compare(new CPos(-1, -1), new CPos(-2, -2));
+			Assert.AreEqual(-1, result);
+		}
+
+		[TestCase(TestName = "SortFuncColinearVertical")]
+		public void SortFuncColinearVertical()
+		{
+			var compare = new CompareAngleFromPoint(new CPos(0, 0));
+
+			int result = compare.Compare(new CPos(0, 1), new CPos(0, 2));
+			Assert.AreEqual(-1, result);
+		}
 	}
 }
