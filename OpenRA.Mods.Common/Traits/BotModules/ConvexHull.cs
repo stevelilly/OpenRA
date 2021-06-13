@@ -68,6 +68,8 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 			int sb = Math.Sign(bv.X);
 			if (sa != sb)
 				return Math.Sign(bv.X - av.X);
+
+			// FIXME, if this is 0, the points are colinear, tie-break based on distance (shortest first)
 			return Math.Sign(bv.X * av.Y - av.X * bv.Y);
 		}
 	}

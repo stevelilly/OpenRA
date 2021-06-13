@@ -86,6 +86,46 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			}
 		}
 
+		[TestCase(TestName = "Triangle with colinear points in ascending order.")]
+		public void TriangleColinearAscending()
+		{
+			var points = new CPos[4];
+			points[0] = new CPos(0, 0);
+			points[1] = new CPos(1, 1);
+			points[2] = new CPos(2, 2);
+			points[3] = new CPos(1, 2);
+			var result = GrahamScan.ConvexHull(points);
+			if (!result.SequenceEqual(new[]
+			{
+					new CPos(0, 0),
+					new CPos(2, 2),
+					new CPos(1, 2)
+			}))
+			{
+				Assert.Fail("points did not match, got " + string.Join(", ", result));
+			}
+		}
+
+		[TestCase(TestName = "Triangle with colinear points in descending order.")]
+		public void TriangleColinearDescending()
+		{
+			var points = new CPos[4];
+			points[0] = new CPos(0, 0);
+			points[1] = new CPos(2, 2);
+			points[2] = new CPos(1, 1);
+			points[3] = new CPos(1, 2);
+			var result = GrahamScan.ConvexHull(points);
+			if (!result.SequenceEqual(new[]
+			{
+					new CPos(0, 0),
+					new CPos(2, 2),
+					new CPos(1, 2)
+			}))
+			{
+				Assert.Fail("points did not match, got " + string.Join(", ", result));
+			}
+		}
+
 		[TestCase(TestName = "SortFunc1")]
 		public void SortFunc1()
 		{
@@ -110,6 +150,15 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			var compare = new CompareAngleFromPoint(new CPos(0, 0));
 
 			int result = compare.Compare(new CPos(1, 1), new CPos(0, 3));
+			Assert.AreEqual(-1, result);
+		}
+
+		[TestCase(TestName = "SortFuncColinear")]
+		public void SortFuncColinear()
+		{
+			var compare = new CompareAngleFromPoint(new CPos(0, 0));
+
+			int result = compare.Compare(new CPos(1, 1), new CPos(2, 2));
 			Assert.AreEqual(-1, result);
 		}
 	}
