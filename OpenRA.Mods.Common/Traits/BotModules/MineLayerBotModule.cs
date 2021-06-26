@@ -9,8 +9,11 @@
  */
 #endregion
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using OpenRA.Mods.Common.Traits.BotModules;
+using OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic;
 using OpenRA.Traits;
 
 namespace OpenRA.Mods.Common.Traits
@@ -39,10 +42,13 @@ namespace OpenRA.Mods.Common.Traits
 		readonly Player player;
 
 		private DebugGuage mineLayerGuage, idleGuage;
+		private DebugString myBasePerimeterGuage;
 
 		private int tickCount;
 
 		private IBotRequestUnitProduction[] requestUnitProduction;
+		private ResourceLayer resourceLayer;
+		private BuildingInfluence buildingInfluence;
 
 		public MineLayerBotModule(Actor self, MineLayerBotModuleInfo info)
 			: base(info)
@@ -57,11 +63,14 @@ namespace OpenRA.Mods.Common.Traits
 			requestUnitProduction = self.TraitsImplementing<IBotRequestUnitProduction>().ToArray();
 			mineLayerGuage = new DebugGuage("AI: {0} mnly count".F(player));
 			idleGuage = new DebugGuage("{0} mnly idle count".F(player));
+			myBasePerimeterGuage = new DebugString("{0} base perimeter is now ".F(player));
 		}
 
 		protected override void TraitEnabled(Actor self)
 		{
 			AIUtils.BotDebug("AI: {0} MineLayerBotModule TraitEnabled".F(player));
+			resourceLayer = world.WorldActor.TraitOrDefault<ResourceLayer>();
+			buildingInfluence = world.WorldActor.Trait<BuildingInfluence>();
 		}
 
 		void IBotTick.BotTick(IBot bot)
@@ -98,11 +107,74 @@ namespace OpenRA.Mods.Common.Traits
 			var idleLayers = mineLayers.Where(a => a.CurrentActivity == null);
 			idleGuage.Update(idleLayers.Count());
 
+			byte[] terrainTypeMap = BuildTerrainTypeMap(world.Map, type =>
+			{
+				switch (type)
+				{
+					case "Beach": return 0;
+					case "Bridge": return 0;
+					case "Clear": return 0;
+					case "Gems": return 255;
+					case "Ore": return 254;
+					case "River": return 1;
+					case "Road": return 0;
+					case "Rock": return 1;
+					case "Rough": return 0;
+					case "Tree": return 1;
+					case "Wall": return 1;
+					case "Water": return 1;
+				}
+
+				Log("What is {0}?".F(type));
+				return 0;
+			});
+			byte[] resourceTypeMap = BuildResourceTypeMap(type => 2);
+			byte[] clientIndexMap = BuildPlayerClientIndexMap(world.Players, playerIndex => Convert.ToByte(3 + playerIndex));
+
+			var botMap = new BotMap(buildingInfluence, clientIndexMap, resourceLayer, resourceTypeMap, world.Map, terrainTypeMap);
+
+			byte myBuildings = Convert.ToByte(3 + world.Players.IndexOf(player));
+			CPos[] myBuildingCells = botMap.CollectCoordinates(myBuildings);
+
+			CPos[] myBasePerimeter = GrahamScan.ConvexHull(myBuildingCells);
+			myBasePerimeterGuage.Update("{" + string.Join("}, {", myBasePerimeter) + "}");
+
 			// TODO Calculate deploy pattern based on convex hull of base + ore patch
 			foreach (var layer in idleLayers)
 			{
 				QueueLayMinesOrder(bot, layer, new CPos(36, 34), new CPos(42, 34));
 			}
+		}
+
+		private byte[] BuildTerrainTypeMap(Map map, Func<string, byte> mapFunc)
+		{
+			var terainInfo = map.Rules.TileSet.TerrainInfo;
+			var result = new byte[terainInfo.Length];
+			for (int i = 0; i < result.Length; i++)
+			{
+				result[i] = mapFunc(terainInfo[i].Type);
+			}
+
+			return result;
+		}
+
+		private byte[] BuildResourceTypeMap(Func<int, byte> mapFunc)
+		{
+			// TODO how to determine all resource types? seen so far [1, 2]
+			return new byte[] { 0, 1, 1 };
+		}
+
+		private byte[] BuildPlayerClientIndexMap(Player[] players, Func<int, byte> mapFunc)
+		{
+			// clientIndex may not have the same bounds as player index
+			// but there are neutral players, so players.Length > numClients ?
+			byte[] result = new byte[players.Length];
+			for (int i = 0; i < result.Length; i++)
+			{
+				result[players[i].ClientIndex] = mapFunc(i);
+			}
+
+			return result;
 		}
 
 		private void QueueLayMinesOrder(IBot bot, Actor minelayer, CPos from, CPos to)
@@ -143,6 +215,26 @@ namespace OpenRA.Mods.Common.Traits
 			{
 				this.count = count;
 				AIUtils.BotDebug("{0}={1}".F(prefix, count));
+			}
+		}
+	}
+
+	class DebugString
+	{
+		private string value;
+		private readonly string prefix;
+
+		public DebugString(string prefix)
+		{
+			this.prefix = prefix;
+		}
+
+		public void Update(string value)
+		{
+			if (value != this.value)
+			{
+				this.value = value;
+				AIUtils.BotDebug("{0}{1}", prefix, value);
 			}
 		}
 	}
