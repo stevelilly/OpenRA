@@ -7,6 +7,16 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 	[TestFixture]
 	class ConvexHullTest
 	{
+		[TestCase(TestName = "Convex hull of an empty set of points is an empty set of points.")]
+		public void EmptyArray()
+		{
+			var result = GrahamScan.ConvexHull(new CPos[0]);
+			if (!result.SequenceEqual(new CPos[0]))
+			{
+				Assert.Fail("points did not match, got " + string.Join(", ", result));
+			}
+		}
+
 		[TestCase(TestName = "Convex hull of the unit square should output in counter-clockwise order from the bottom-left most point.")]
 		public void UnitSquare()
 		{

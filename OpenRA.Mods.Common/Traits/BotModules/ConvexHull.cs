@@ -7,6 +7,11 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 	{
 		public static CPos[] ConvexHull(CPos[] points)
 		{
+			if (points.Length == 0)
+			{
+				return new CPos[0];
+			}
+
 			// Find the point P0 with the lowest Y, then by lowest X
 			int minIndex = 0;
 			CPos minPoint = points[0];
