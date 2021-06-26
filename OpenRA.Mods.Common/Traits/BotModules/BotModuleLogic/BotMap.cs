@@ -5,17 +5,17 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 	class BotMap
 	{
 		private byte[] mapData;
-		private int width, height;
+		public readonly int Width, Height;
 
 		public BotMap(BuildingInfluence buildingInfluence, byte[] clientIndexMap, ResourceLayer resourceLayer, byte[] resourceTypeMap, Map worldMap, byte[] terrainTypeMap)
 		{
-			width = worldMap.Bounds.Width;
-			height = worldMap.Bounds.Height;
-			mapData = new byte[width * height];
+			Width = worldMap.Bounds.Width;
+			Height = worldMap.Bounds.Height;
+			mapData = new byte[Width * Height];
 
-			for (int i = 0, y = 1; y <= height; y++)
+			for (int i = 0, y = 1; y <= Height; y++)
 			{
-				for (int x = 1; x <= width; x++, i++)
+				for (int x = 1; x <= Width; x++, i++)
 				{
 					CPos pos = new CPos(x, y);
 					ResourceType resourceType;
@@ -40,9 +40,9 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 		public CPos[] CollectCoordinates(byte select)
 		{
 			List<CPos> result = new List<CPos>();
-			for (int i = 0, y = 1; y <= height; y++)
+			for (int i = 0, y = 1; y <= Height; y++)
 			{
-				for (int x = 1; x <= width; x++, i++)
+				for (int x = 1; x <= Width; x++, i++)
 				{
 					if (mapData[i] == select)
 					{

@@ -41,7 +41,7 @@ namespace OpenRA.Mods.Common.Traits
 		readonly World world;
 		readonly Player player;
 
-		private DebugGuage mineLayerGuage, idleGuage;
+		private DebugGuage mineLayerGuage, idleGuage, myBaseAreaGuage;
 		private DebugString myBasePerimeterGuage;
 
 		private int tickCount;
@@ -63,6 +63,7 @@ namespace OpenRA.Mods.Common.Traits
 			requestUnitProduction = self.TraitsImplementing<IBotRequestUnitProduction>().ToArray();
 			mineLayerGuage = new DebugGuage("AI: {0} mnly count".F(player));
 			idleGuage = new DebugGuage("{0} mnly idle count".F(player));
+			myBaseAreaGuage = new DebugGuage("{0} base area".F(player));
 			myBasePerimeterGuage = new DebugString("{0} base perimeter is now ".F(player));
 		}
 
@@ -139,11 +140,26 @@ namespace OpenRA.Mods.Common.Traits
 			CPos[] myBasePerimeter = GrahamScan.ConvexHull(myBuildingCells);
 			myBasePerimeterGuage.Update("{" + string.Join("}, {", myBasePerimeter) + "}");
 
+			byte[] minePattern = new byte[botMap.Width * botMap.Height];
+			PolyFill.Fill(minePattern, botMap.Width, botMap.Height, myBasePerimeter, 1);
+			myBaseAreaGuage.Update(Sum(minePattern));
+
 			// TODO Calculate deploy pattern based on convex hull of base + ore patch
 			foreach (var layer in idleLayers)
 			{
 				QueueLayMinesOrder(bot, layer, new CPos(36, 34), new CPos(42, 34));
 			}
+		}
+
+		private static int Sum(byte[] array)
+		{
+			int sum = 0;
+			foreach (var b in array)
+			{
+				sum += b;
+			}
+
+			return sum;
 		}
 
 		private byte[] BuildTerrainTypeMap(Map map, Func<string, byte> mapFunc)
