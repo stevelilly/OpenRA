@@ -162,5 +162,20 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				}
 			}
 		}
+
+		public static void Retain(byte[] target, byte[] rhs, byte ifNotValue, byte thenValue)
+		{
+			int length = target.Length;
+			if (rhs.Length != length)
+				throw new ArgumentOutOfRangeException("rhs", "array lengths differ, should be {0} was {1}".F(length, rhs.Length));
+
+			for (int i = 0; i < length; i++)
+			{
+				if (rhs[i] != ifNotValue)
+				{
+					target[i] = thenValue;
+				}
+			}
+		}
 	}
 }

@@ -9,6 +9,14 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 		private byte[] mapData;
 		public readonly int Width, Height;
 
+		public byte[] Data
+		{
+			get
+			{
+				return mapData;
+			}
+		}
+
 		public BotMap(BuildingInfluence buildingInfluence, byte[] playerActorIdMap, IResourceLayer resourceLayer, Dictionary<string, byte> resourceTypeMap, Map worldMap, byte[] terrainTypeMap)
 		{
 			Width = worldMap.Bounds.Width;

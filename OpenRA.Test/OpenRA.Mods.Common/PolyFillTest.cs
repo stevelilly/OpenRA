@@ -39,5 +39,19 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 					Assert.Fail("message did not match, got " + e.Message);
 			}
 		}
+
+		[TestCase(TestName = "Retain Success")]
+		public void TestRetain()
+		{
+			byte[] target = { 1, 2, 3, 4, 5 };
+			byte[] map = { 6, 7, 6, 7, 6 };
+			PolyFill.Retain(target, map, 7, 8);
+
+			// where map did not have 7s, there should now be 8s in target
+			if (!target.SequenceEqual(new byte[] { 8, 2, 8, 4, 8 }))
+			{
+				Assert.Fail("bitmap does not match, got " + string.Join(", ", target));
+			}
+		}
 	}
 }
