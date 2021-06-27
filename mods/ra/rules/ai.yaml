@@ -86,6 +86,7 @@ Player:
 		ServiceDepotTypes: fix	# don't technically need this, since it is configured under mnly.Rearmable.RearmActors in vehicles.yaml
 		FactoryTypes: weap # not needed anymore, we signal IBotRequestUnitProduction that we want to produce mnly
 		MineLayerTypes: mnly
+		MineTypes: minv
 		MineLayerBuildLimit: 5
 	BaseBuilderBotModule@rush:
 		RequiresCondition: enable-rush-ai
