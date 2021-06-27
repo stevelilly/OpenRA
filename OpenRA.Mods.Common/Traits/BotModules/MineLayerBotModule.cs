@@ -41,7 +41,7 @@ namespace OpenRA.Mods.Common.Traits
 		readonly World world;
 		readonly Player player;
 
-		private DebugGuage mineLayerGuage, idleGuage, myBaseAreaGuage;
+		private DebugGuage mineLayerGuage, idleGuage, mineCountGuage;
 		private DebugString myBasePerimeterGuage;
 
 		private int tickCount;
@@ -63,7 +63,7 @@ namespace OpenRA.Mods.Common.Traits
 			requestUnitProduction = self.TraitsImplementing<IBotRequestUnitProduction>().ToArray();
 			mineLayerGuage = new DebugGuage("AI: {0} mnly count".F(player));
 			idleGuage = new DebugGuage("{0} mnly idle count".F(player));
-			myBaseAreaGuage = new DebugGuage("{0} base area".F(player));
+			mineCountGuage = new DebugGuage("{0} target mine count".F(player));
 			myBasePerimeterGuage = new DebugString("{0} base perimeter is now ".F(player));
 		}
 
@@ -140,9 +140,27 @@ namespace OpenRA.Mods.Common.Traits
 			CPos[] myBasePerimeter = GrahamScan.ConvexHull(myBuildingCells);
 			myBasePerimeterGuage.Update("{" + string.Join("}, {", myBasePerimeter) + "}");
 
-			byte[] minePattern = new byte[botMap.Width * botMap.Height];
-			PolyFill.Fill(minePattern, botMap.Width, botMap.Height, myBasePerimeter, 1);
-			myBaseAreaGuage.Update(Sum(minePattern));
+			byte[] freePattern = new byte[botMap.Width * botMap.Height];
+			PolyFill.Fill(freePattern, botMap.Width, botMap.Height, myBasePerimeter, 1);
+			const int freeBoundary = 5;
+			for (int i = 0; i < freeBoundary; i++)
+			{
+				PolyFill.Dilate(freePattern, botMap.Width, botMap.Height, 1);
+			}
+
+			byte[] minePattern = freePattern.ToArray();
+			const int mineBoundary = 2;
+			for (int i = 0; i < mineBoundary; i++)
+			{
+				PolyFill.Dilate(minePattern, botMap.Width, botMap.Height, 1);
+			}
+
+			PolyFill.Subtract(minePattern, freePattern, 1, 0);
+			/* TODO keep mines only in clear spots on the map */
+			/* TODO keep mines only in spots reachable from the base */
+			/* PolyFill.Retain(minePattern, botMap.Width, botMap.Height, botMap.Data, 0, 0); */
+
+			mineCountGuage.Update(Sum(minePattern));
 
 			// TODO Calculate deploy pattern based on convex hull of base + ore patch
 			foreach (var layer in idleLayers)

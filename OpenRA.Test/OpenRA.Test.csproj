@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="OpenRA.Mods.Common\ConvexHullTest.cs" />
     <Compile Include="OpenRA.Mods.Common\DilateTest.cs" />
+    <Compile Include="OpenRA.Mods.Common\PolyFillTest.cs" />
   </ItemGroup>
   <Target Name="DisableAnalyzers" BeforeTargets="CoreCompile" Condition="'$(Configuration)'=='Release'">
     <!-- Disable code style analysis on Release builds to improve compile-time performance -->
