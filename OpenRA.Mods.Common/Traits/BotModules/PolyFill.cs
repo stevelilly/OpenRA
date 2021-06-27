@@ -4,7 +4,7 @@
 
 namespace OpenRA.Mods.Common.Traits.BotModules
 {
-	class PolyFill
+	public class PolyFill
 	{
 		public static void Fill(byte[] data, int width, int height, CPos[] poly, byte value)
 		{
@@ -86,6 +86,63 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 			for (int i = startIndex, end = startIndex + count; i < end; i++)
 			{
 				data[i] = value;
+			}
+		}
+
+		public static void Dilate(byte[] data, int width, int height, byte value)
+		{
+			// We don't dilate directly from a row to the row beneath it, since we would then read that new data and bleed into all rows below.
+			// Instead, buffer the run lengths, and write then after reading the next row
+			int maxRuns = (width + 1) / 2;
+			int[] prevScanlineRuns = new int[maxRuns * 2], runs = new int[maxRuns * 2];
+			int prevScanlineRunLength = 0;
+
+			for (int y = 0; y < height; y++)
+			{
+				int rowOffset = y * width;
+				int runIndex = 0;
+				for (int x = 0; x < width; x++)
+				{
+					if (data[rowOffset + x] == value)
+					{
+						int x0 = x;
+						for (x++; x < width && data[rowOffset + x] == value; x++) { }
+						int x1 = x;
+						if (x0 > 0)
+						{
+							x0--;
+							data[rowOffset + x0] = value;
+						}
+
+						if (x1 < width)
+						{
+							data[rowOffset + x1] = value;
+							x1++;
+						}
+
+						if (y > 0)
+						{
+							Fill(data, value, rowOffset - width + x0, x1 - x0);
+						}
+
+						runs[runIndex++] = x0;
+						runs[runIndex++] = x1;
+					}
+				}
+
+				// now at the end of the scanline, write any runs from the previous scanline
+				for (int i = 0; i < prevScanlineRunLength;)
+				{
+					int x0 = prevScanlineRuns[i++];
+					int x1 = prevScanlineRuns[i++];
+					Fill(data, value, rowOffset + x0, x1 - x0);
+				}
+
+				// swap the two run buffers
+				prevScanlineRunLength = runIndex;
+				int[] tmp = prevScanlineRuns;
+				prevScanlineRuns = runs;
+				runs = tmp;
 			}
 		}
 	}

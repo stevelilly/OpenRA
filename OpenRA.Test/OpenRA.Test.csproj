@@ -15,5 +15,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="OpenRA.Mods.Common\ConvexHullTest.cs" />
+    <Compile Include="OpenRA.Mods.Common\DilateTest.cs" />
   </ItemGroup>
 </Project>
