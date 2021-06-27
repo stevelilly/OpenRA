@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
@@ -35,6 +36,14 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 					}
 				}
 			}
+		}
+
+		public BotMap(byte[] mapData, int width, int height)
+		{
+			if (width * height != mapData.Length) throw new Exception();
+			this.mapData = mapData;
+			Width = width;
+			Height = height;
 		}
 
 		public CPos[] CollectCoordinates(byte select)
