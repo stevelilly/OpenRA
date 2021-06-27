@@ -211,14 +211,22 @@ namespace OpenRA.Mods.Common.Traits
 			/* PolyFill.Retain(minePattern, botMap.Width, botMap.Height, botMap.Data, 0, 0); */
 
 			var mines = myActors.GetOrEmpty("mine");
+			foreach (var mine in mines)
+			{
+				minePattern[mine.Location.Y * botMap.Width + mine.Location.X] = 0;
+			}
 
 			mineCountGuage.Update(mines.Count);
 			mineTargetCountGuage.Update(Sum(minePattern));
 
 			// TODO Calculate deploy pattern based on convex hull of base + ore patch
+			botMap = new BotMap(minePattern, botMap.Width, botMap.Height);
+			CPos[] mineCoords = botMap.CollectCoordinates(1);
 			foreach (var layer in idleLayers)
 			{
-				QueueLayMinesOrder(bot, layer, new CPos(36, 34), new CPos(42, 34));
+				if (mineCoords.Length == 0) break;
+				CPos pos = mineCoords.Random(world.LocalRandom);
+				QueueLayMinesOrder(bot, layer, pos, pos);
 			}
 		}
 
