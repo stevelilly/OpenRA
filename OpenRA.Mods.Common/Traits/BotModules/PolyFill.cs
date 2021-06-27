@@ -2,6 +2,8 @@
  * http://alienryderflex.com/polygon_fill/
  */
 
+using System;
+
 namespace OpenRA.Mods.Common.Traits.BotModules
 {
 	public class PolyFill
@@ -143,6 +145,21 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				int[] tmp = prevScanlineRuns;
 				prevScanlineRuns = runs;
 				runs = tmp;
+			}
+		}
+
+		public static void Subtract(byte[] target, byte[] rhs, byte ifValue, byte thenValue)
+		{
+			int length = target.Length;
+			if (rhs.Length != length)
+				throw new ArgumentOutOfRangeException("rhs", "array lengths differ, should be {0} was {1}".F(length, rhs.Length));
+
+			for (int i = 0; i < length; i++)
+			{
+				if (rhs[i] == ifValue)
+				{
+					target[i] = thenValue;
+				}
 			}
 		}
 	}
