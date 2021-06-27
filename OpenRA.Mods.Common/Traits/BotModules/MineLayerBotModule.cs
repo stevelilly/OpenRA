@@ -30,10 +30,32 @@ namespace OpenRA.Mods.Common.Traits
 		[Desc("Tells the AI what army unit types can lay mines.")]
 		public readonly HashSet<string> MineLayerTypes = new HashSet<string>();
 
+		[Desc("Tells the AI what actor types are considered mines.")]
+		public readonly HashSet<string> MineTypes = new HashSet<string>();
+
 		[Desc("Tells the AI how many mine layers it should build.")]
 		public readonly int MineLayerBuildLimit;
 
 		public override object Create(ActorInitializer init) { return new MineLayerBotModule(init.Self, this); }
+	}
+
+	static class MyExtensions
+	{
+		public static V GetOrDefault<K, V>(this IDictionary<K, V> dict, K key)
+		{
+			V value;
+			if (!dict.TryGetValue(key, out value))
+				return default(V);
+			return value;
+		}
+
+		public static List<V> GetOrEmpty<K, V>(this IDictionary<K, List<V>> dict, K key)
+		{
+			List<V> value;
+			if (!dict.TryGetValue(key, out value))
+				return new List<V>();
+			return value;
+		}
 	}
 
 	public class MineLayerBotModule : ConditionalTrait<MineLayerBotModuleInfo>, IBotTick
@@ -41,10 +63,12 @@ namespace OpenRA.Mods.Common.Traits
 		readonly World world;
 		readonly Player player;
 
-		private DebugGuage mineLayerGuage, idleGuage, mineCountGuage;
+		private DebugGuage mineLayerGuage, idleGuage, mineCountGuage, mineTargetCountGuage;
 		private DebugString myBasePerimeterGuage;
 
 		private int tickCount;
+
+		private Dictionary<string, string> actorTypeMapping = new Dictionary<string, string>();
 
 		private IBotRequestUnitProduction[] requestUnitProduction;
 		private ResourceLayer resourceLayer;
@@ -55,6 +79,9 @@ namespace OpenRA.Mods.Common.Traits
 		{
 			world = self.World;
 			player = self.Owner;
+
+			foreach (var name in info.MineLayerTypes) actorTypeMapping[name] = "mineLayer";
+			foreach (var name in info.MineTypes) actorTypeMapping[name] = "mine";
 		}
 
 		protected override void Created(Actor self)
@@ -63,7 +90,8 @@ namespace OpenRA.Mods.Common.Traits
 			requestUnitProduction = self.TraitsImplementing<IBotRequestUnitProduction>().ToArray();
 			mineLayerGuage = new DebugGuage("AI: {0} mnly count".F(player));
 			idleGuage = new DebugGuage("{0} mnly idle count".F(player));
-			mineCountGuage = new DebugGuage("{0} target mine count".F(player));
+			mineCountGuage = new DebugGuage("{0} laid mine count".F(player));
+			mineTargetCountGuage = new DebugGuage("{0} target mine count".F(player));
 			myBasePerimeterGuage = new DebugString("{0} base perimeter is now ".F(player));
 		}
 
@@ -72,6 +100,26 @@ namespace OpenRA.Mods.Common.Traits
 			AIUtils.BotDebug("AI: {0} MineLayerBotModule TraitEnabled".F(player));
 			resourceLayer = world.WorldActor.TraitOrDefault<ResourceLayer>();
 			buildingInfluence = world.WorldActor.Trait<BuildingInfluence>();
+		}
+
+		private static Dictionary<T, List<A>> Associate<T, A>(IEnumerable<A> items, Func<A, T> groupFunc)
+		{
+			Dictionary<T, List<A>> result = new Dictionary<T, List<A>>();
+			foreach (var item in items)
+			{
+				var group = groupFunc(item);
+				if (group == null) continue;
+				List<A> listForGroup;
+				if (!result.TryGetValue(group, out listForGroup))
+				{
+					listForGroup = new List<A>();
+					result[group] = listForGroup;
+				}
+
+				listForGroup.Add(item);
+			}
+
+			return result;
 		}
 
 		void IBotTick.BotTick(IBot bot)
@@ -83,7 +131,9 @@ namespace OpenRA.Mods.Common.Traits
 				AIUtils.BotDebug("AI: {0} MineLayerBotModule tick {1}".F(player, tickCount));
 			}
 
-			var mineLayers = world.Actors.Where(a => a.Owner == player && Info.MineLayerTypes.Contains(a.Info.Name));
+			var myActors = Associate(world.Actors.Where(a => a.Owner == player), a => actorTypeMapping.GetOrDefault(a.Info.Name));
+
+			var mineLayers = myActors.GetOrEmpty("mineLayer");
 
 			mineLayerGuage.Update(mineLayers.Count());
 
@@ -160,7 +210,10 @@ namespace OpenRA.Mods.Common.Traits
 			/* TODO keep mines only in spots reachable from the base */
 			/* PolyFill.Retain(minePattern, botMap.Width, botMap.Height, botMap.Data, 0, 0); */
 
-			mineCountGuage.Update(Sum(minePattern));
+			var mines = myActors.GetOrEmpty("mine");
+
+			mineCountGuage.Update(mines.Count);
+			mineTargetCountGuage.Update(Sum(minePattern));
 
 			// TODO Calculate deploy pattern based on convex hull of base + ore patch
 			foreach (var layer in idleLayers)
