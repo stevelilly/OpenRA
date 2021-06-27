@@ -206,9 +206,10 @@ namespace OpenRA.Mods.Common.Traits
 			}
 
 			PolyFill.Subtract(minePattern, freePattern, 1, 0);
-			/* TODO keep mines only in clear spots on the map */
+
+			// keep mines only in clear spots on the map
+			PolyFill.Retain(minePattern, botMap.Data, 0, 0);
 			/* TODO keep mines only in spots reachable from the base */
-			/* PolyFill.Retain(minePattern, botMap.Width, botMap.Height, botMap.Data, 0, 0); */
 
 			var mines = myActors.GetOrEmpty("mine");
 			foreach (var mine in mines)
