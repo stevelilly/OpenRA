@@ -150,10 +150,10 @@ namespace OpenRA.Mods.Common.Traits
 				}
 			}
 
-			if (mineLayers.Count() == 0)
+			/*if (mineLayers.Count() == 0)
 			{
 				return;
-			}
+			}*/
 
 			var idleLayers = mineLayers.Where(a => a.CurrentActivity == null);
 			idleGuage.Update(idleLayers.Count());
@@ -222,12 +222,29 @@ namespace OpenRA.Mods.Common.Traits
 
 			// TODO Calculate deploy pattern based on convex hull of base + ore patch
 			botMap = new BotMap(minePattern, botMap.Width, botMap.Height);
-			CPos[] mineCoords = botMap.CollectCoordinates(1);
 			foreach (var layer in idleLayers)
 			{
-				if (mineCoords.Length == 0) break;
-				CPos pos = mineCoords.Random(world.LocalRandom);
-				QueueLayMinesOrder(bot, layer, pos, pos);
+				List<MineSpan> mineSpans = MineSpan.CollectSpans(botMap, 5);
+				if (mineSpans.Count == 0) break;
+				int maxLength = mineSpans.Max(span => span.Count);
+				mineSpans.RemoveAll(span => span.Count < maxLength);
+
+				MineSpan choice = mineSpans.Random(world.LocalRandom);
+				QueueLayMinesOrder(bot, layer, choice.FirstPos(), choice.SecondPos());
+				if (choice.Horizontal)
+				{
+					for (int i = 0; i < choice.Count; i++)
+					{
+						minePattern[botMap.Width * choice.OtherLoc + choice.Loc + i] = 0;
+					}
+				}
+				else
+				{
+					for (int i = 0; i < choice.Count; i++)
+					{
+						minePattern[botMap.Width * (choice.Loc + i) + choice.OtherLoc] = 0;
+					}
+				}
 			}
 		}
 
