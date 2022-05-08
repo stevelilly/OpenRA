@@ -1,8 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace OpenRA.Mods.Common.Traits.BotModules
 {
@@ -14,9 +11,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 		private uint[] distanceData;
 		private bool[] unpassable;
 		private bool[] updateNeeded;
-		private int[] updateQueueX;
-		private int[] updateQueueY;
-		private int updateQueueLength;
+		private Queue<CPos> updateQueue;
 		public readonly int Width, Height;
 
 		public DistanceMap(int width, int height)
@@ -28,8 +23,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 			distanceData = new uint[width * height];
 			unpassable = new bool[width * height];
 			updateNeeded = new bool[width * height];
-			updateQueueX = new int[width * height];
-			updateQueueY = new int[width * height];
+			updateQueue = new Queue<CPos>();
 			for (int i = 0; i < distanceData.Length; i++)
 				distanceData[i] = uint.MaxValue;
 		}
@@ -52,26 +46,23 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				if (!updateNeeded[idx])
 				{
 					updateNeeded[idx] = true;
-					updateQueueX[updateQueueLength] = x;
-					updateQueueY[updateQueueLength] = y;
-					updateQueueLength++;
+					updateQueue.Enqueue(new CPos(x, y));
 				}
 			}
 		}
 
 		public void Solve()
 		{
-			while (updateQueueLength > 0)
+			while (updateQueue.Count > 0)
 			{
-				updateQueueLength--;
-				int x = updateQueueX[updateQueueLength];
-				int y = updateQueueY[updateQueueLength];
+				CPos item = updateQueue.Dequeue();
+				int x = item.X;
+				int y = item.Y;
 				int idx = y * Width + x;
 				updateNeeded[idx] = false;
 
 				uint value = distanceData[idx];
 
-				// This needs optimizing: empirically performance is O(area^2)
 				LowerValue(x, y - 1, value + AXISDIST);
 				LowerValue(x - 1, y, value + AXISDIST);
 				LowerValue(x + 1, y, value + AXISDIST);
