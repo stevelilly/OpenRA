@@ -12,8 +12,10 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 		[TestCase(TestName = "Filled from a singularity")]
 		public void TestSingularity()
 		{
-			DistanceMap map = new DistanceMap(100, 100);
-			map.SetRoot(49, 49);
+			const int oddMapLength = 99;
+			const int root = (oddMapLength - 1) / 2;
+			DistanceMap map = new DistanceMap(oddMapLength, oddMapLength);
+			map.SetRoot(root, root);
 			map.Solve();
 
 			Assert.Fail("got here");

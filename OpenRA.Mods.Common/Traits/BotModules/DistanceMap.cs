@@ -70,13 +70,15 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				updateNeeded[idx] = false;
 
 				uint value = distanceData[idx];
-				LowerValue(x - 1, y - 1, value + DIAGDIST);
+
+				// This needs optimizing: empirically performance is O(area^2)
 				LowerValue(x, y - 1, value + AXISDIST);
-				LowerValue(x + 1, y - 1, value + DIAGDIST);
 				LowerValue(x - 1, y, value + AXISDIST);
 				LowerValue(x + 1, y, value + AXISDIST);
-				LowerValue(x - 1, y + 1, value + DIAGDIST);
 				LowerValue(x, y + 1, value + AXISDIST);
+				LowerValue(x - 1, y - 1, value + DIAGDIST);
+				LowerValue(x + 1, y - 1, value + DIAGDIST);
+				LowerValue(x - 1, y + 1, value + DIAGDIST);
 				LowerValue(x + 1, y + 1, value + DIAGDIST);
 			}
 		}
