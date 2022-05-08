@@ -14,7 +14,8 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 		private uint[] distanceData;
 		private bool[] unpassable;
 		private bool[] updateNeeded;
-		private CPos[] updateQueue;
+		private int[] updateQueueX;
+		private int[] updateQueueY;
 		private int updateQueueLength;
 		public readonly int Width, Height;
 
@@ -27,7 +28,8 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 			distanceData = new uint[width * height];
 			unpassable = new bool[width * height];
 			updateNeeded = new bool[width * height];
-			updateQueue = new CPos[width * height];
+			updateQueueX = new int[width * height];
+			updateQueueY = new int[width * height];
 			for (int i = 0; i < distanceData.Length; i++)
 				distanceData[i] = uint.MaxValue;
 		}
@@ -50,7 +52,9 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				if (!updateNeeded[idx])
 				{
 					updateNeeded[idx] = true;
-					updateQueue[updateQueueLength++] = new CPos(x, y);
+					updateQueueX[updateQueueLength] = x;
+					updateQueueY[updateQueueLength] = y;
+					updateQueueLength++;
 				}
 			}
 		}
@@ -59,9 +63,9 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 		{
 			while (updateQueueLength > 0)
 			{
-				int x = updateQueue[updateQueueLength].X;
-				int y = updateQueue[updateQueueLength].Y;
 				updateQueueLength--;
+				int x = updateQueueX[updateQueueLength];
+				int y = updateQueueY[updateQueueLength];
 				int idx = y * Width + x;
 				updateNeeded[idx] = false;
 
