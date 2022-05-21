@@ -122,6 +122,8 @@ namespace OpenRA.Mods.Common.Traits
 			return result;
 		}
 
+		private bool fileWritten = false;
+
 		void IBotTick.BotTick(IBot bot)
 		{
 			// there seems to be roughly 25 bot ticks per second
@@ -167,22 +169,28 @@ namespace OpenRA.Mods.Common.Traits
 					case "Clear": return 0;
 					case "Gems": return 255;
 					case "Ore": return 254;
-					case "River": return 1;
+					case "River": return 2;
 					case "Road": return 0;
-					case "Rock": return 1;
+					case "Rock": return 2;
 					case "Rough": return 0;
-					case "Tree": return 1;
-					case "Wall": return 1;
+					case "Tree": return 2;
+					case "Wall": return 2;
 					case "Water": return 1;
 				}
 
 				Log("What is {0}?".F(type));
-				return 0;
+				return 104;
 			});
-			byte[] resourceTypeMap = BuildResourceTypeMap(type => 2);
+			byte[] resourceTypeMap = BuildResourceTypeMap(type => 4);
 			byte[] clientIndexMap = BuildPlayerClientIndexMap(world.Players, playerIndex => Convert.ToByte(3 + playerIndex));
 
 			var botMap = new BotMap(buildingInfluence, clientIndexMap, resourceLayer, resourceTypeMap, world.Map, terrainTypeMap);
+			if (!fileWritten)
+			{
+				botMap.WriteToFile("saimon.map");
+				Log("Map file written");
+				fileWritten = true;
+			}
 
 			byte myBuildings = Convert.ToByte(3 + world.Players.IndexOf(player));
 			CPos[] myBuildingCells = botMap.CollectCoordinates(myBuildings);
@@ -274,7 +282,7 @@ namespace OpenRA.Mods.Common.Traits
 		private byte[] BuildResourceTypeMap(Func<int, byte> mapFunc)
 		{
 			// TODO how to determine all resource types? seen so far [1, 2]
-			return new byte[] { 0, 1, 1 };
+			return new byte[] { 38, 169, 170 };
 		}
 
 		private byte[] BuildPlayerClientIndexMap(Player[] players, Func<int, byte> mapFunc)

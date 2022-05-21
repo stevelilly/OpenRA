@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Text.RegularExpressions;
 
 namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 {
@@ -29,6 +31,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 					CPos pos = new CPos(x, y);
 					ResourceType resourceType;
 					Actor building;
+					mapData[i] = terrainTypeMap[worldMap.GetTerrainIndex(pos)];
 					if ((resourceType = resourceLayer.GetResourceType(pos)) != null)
 					{
 						int resourceTypeIndex = resourceType.Info.ResourceType;
@@ -36,15 +39,54 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 					}
 					else if ((building = buildingInfluence.GetBuildingAt(pos)) != null)
 					{
-						mapData[i] = clientIndexMap[building.Owner.ClientIndex];
-					}
-					else
-					{
-						mapData[i] = terrainTypeMap[worldMap.GetTerrainIndex(pos)];
+						byte buildingType = GetBuildingType(building.Info.Name);
+						mapData[i] = buildingType;
 					}
 				}
 			}
 		}
+
+		private static byte GetBuildingType(string name)
+		{
+			// TODO try to optimize this
+			// trees, ore mines etc are all "buildings"
+			name = Regex.Replace(name, ".husk$", "");
+			name = Regex.Replace(name, "[0-9]+$", "");
+
+			switch (name)
+			{
+				// strategic structures
+				case "mine": return 17;
+				case "gmine": return 18;
+				case "oilb": return 19;	// oil derrick
+
+				// permanent obstacles
+				case "t":	// tree
+				case "tc":	// more trees
+				case "utilpol":
+				case "boxes":
+				case "ice":
+					return 3;
+
+				// destructible structures
+				case "barl":	// both of these are barrels
+				case "brl":
+				case "cycl": // chain link fence
+				case "fenc":
+				case "snowhut":
+				case "v":	// village building
+				case "wood":
+					return 20;
+
+				// unclassified structures
+				default:
+					if (unclassifiedSeen.Add(name))
+						Console.WriteLine(name);
+					return 27;
+			}
+		}
+
+		private static HashSet<string> unclassifiedSeen = new HashSet<string>();
 
 		public BotMap(byte[] mapData, int width, int height)
 		{
@@ -69,6 +111,18 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 			}
 
 			return result.ToArray();
+		}
+
+		public void WriteToFile(string filename)
+		{
+			using (var file = new BinaryWriter(new FileStream(filename, FileMode.OpenOrCreate)))
+			{
+				file.Write(0xed715aba);
+				file.Write(Width);
+				file.Write(Height);
+				file.Write(1);	// bytes per cell
+				file.Write(mapData);
+			}
 		}
 	}
 }
