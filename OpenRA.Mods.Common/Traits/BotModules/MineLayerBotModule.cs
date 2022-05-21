@@ -185,9 +185,50 @@ namespace OpenRA.Mods.Common.Traits
 			byte[] clientIndexMap = BuildPlayerClientIndexMap(world.Players, playerIndex => Convert.ToByte(3 + playerIndex));
 
 			var botMap = new BotMap(buildingInfluence, clientIndexMap, resourceLayer, resourceTypeMap, world.Map, terrainTypeMap);
+
 			if (!fileWritten)
 			{
 				botMap.WriteToFile("saimon.map");
+				DistanceMap dm = new DistanceMap(botMap.Width, botMap.Height);
+				bool[] isObstacle = new bool[256];
+				isObstacle[1] = true;
+				isObstacle[2] = true;
+				isObstacle[17] = true;
+				isObstacle[18] = true;
+				isObstacle[3] = true;
+				for (int y = 0; y < botMap.Height; y++)
+				{
+					for (int x = 0; x < botMap.Width; x++)
+					{
+						if (isObstacle[botMap.Data[y * botMap.Width + x]])
+						{
+							dm.SetRoot(x, y);
+						}
+					}
+				}
+
+				dm.Solve();
+				dm.WriteToFile("obstacle-distance.map");
+
+				var mcvs = world.Actors.Where(a => a.Info.Name == "mcv").ToList();
+				mcvs.ForEach(mcv =>
+				{
+					DistanceMap dm2 = new DistanceMap(botMap.Width, botMap.Height);
+					for (int y = 0; y < botMap.Height; y++)
+					{
+						for (int x = 0; x < botMap.Width; x++)
+						{
+							if (isObstacle[botMap.Data[y * botMap.Width + x]])
+							{
+								dm2.SetUnpassable(x, y);
+							}
+						}
+					}
+
+					dm2.SetRoot(mcv.Location.X, mcv.Location.Y);
+					dm2.Solve();
+					dm2.WriteToFile("mcvdist-" + mcv.Owner.PlayerName + ".map");
+				});
 				Log("Map file written");
 				fileWritten = true;
 			}
