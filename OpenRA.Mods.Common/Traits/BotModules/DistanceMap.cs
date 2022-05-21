@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace OpenRA.Mods.Common.Traits.BotModules
 {
@@ -72,6 +73,26 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 				LowerValue(x - 1, y + 1, value + DIAGDIST);
 				LowerValue(x + 1, y + 1, value + DIAGDIST);
 			}
+		}
+
+		public void WriteToFile(string filename)
+		{
+			using (var file = new BinaryWriter(new FileStream(filename, FileMode.OpenOrCreate)))
+			{
+				file.Write(0xed715aba);
+				file.Write(Width);
+				file.Write(Height);
+				file.Write(4);  // bytes per cell
+				for (int i = 0; i < distanceData.Length; i++)
+				{
+					file.Write(distanceData[i]);
+				}
+			}
+		}
+
+		public void SetUnpassable(int x, int y)
+		{
+			unpassable[y * Width + x] = true;
 		}
 	}
 }
