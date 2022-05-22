@@ -188,7 +188,7 @@ namespace OpenRA.Mods.Common.Traits
 
 			if (!fileWritten)
 			{
-				botMap.WriteToFile("saimon.map");
+				botMap.WriteToFile("features.map");
 				DistanceMap dm = new DistanceMap(botMap.Width, botMap.Height);
 				bool[] isObstacle = new bool[256];
 				isObstacle[1] = true;
