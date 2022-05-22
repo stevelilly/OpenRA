@@ -58,14 +58,15 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 				// strategic structures
 				case "mine": return 17;
 				case "gmine": return 18;
-				case "oilb": return 19;	// oil derrick
+				case "oilb": return 19; // oil derrick
 
 				// permanent obstacles
+				case "ammobox":
+				case "boxes":
+				case "ice":
 				case "t":	// tree
 				case "tc":	// more trees
 				case "utilpol":
-				case "boxes":
-				case "ice":
 					return 3;
 
 				// destructible structures
