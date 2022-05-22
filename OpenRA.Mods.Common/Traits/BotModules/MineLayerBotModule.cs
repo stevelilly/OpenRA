@@ -210,8 +210,8 @@ namespace OpenRA.Mods.Common.Traits
 				dm.Solve();
 				dm.WriteToFile("obstacle-distance.map");
 
-				var mcvs = world.Actors.Where(a => a.Info.Name == "mcv").ToList();
-				mcvs.ForEach(mcv =>
+				var mcvDistances = world.Actors.Where(a => a.Info.Name == "mcv")
+				.Select(mcv =>
 				{
 					DistanceMap dm2 = new DistanceMap(botMap.Width, botMap.Height);
 					for (int y = 0; y < botMap.Height; y++)
@@ -228,8 +228,12 @@ namespace OpenRA.Mods.Common.Traits
 					dm2.SetRoot(mcv.Location.X, mcv.Location.Y);
 					dm2.Solve();
 					dm2.WriteToFile("mcvdist-" + mcv.Owner.PlayerName + ".map");
-				});
-				Log("Map file written");
+					return dm2;
+				}).ToList();
+				var territory = AssignTerritoryByDistance(mcvDistances);
+				territory.WriteToFile("territory.map");
+
+				Log("Map files written");
 				fileWritten = true;
 			}
 
@@ -295,6 +299,36 @@ namespace OpenRA.Mods.Common.Traits
 					}
 				}
 			}
+		}
+
+		private static BotMap AssignTerritoryByDistance(List<DistanceMap> distanceMaps)
+		{
+			int width = distanceMaps[0].Width;
+			int height = distanceMaps[1].Height;
+			int length = width * height;
+			byte[] resultData = new byte[width * height];
+			BotMap result = new BotMap(resultData, width, height);
+			for (int idx = 0; idx < length; idx++)
+			{
+				int bestIndex = 0;
+				uint bestValue = uint.MaxValue;
+				for (int i = 0; i < distanceMaps.Count; i++)
+				{
+					if (!distanceMaps[i].UnpassableData[idx])
+					{
+						uint distance = distanceMaps[i].DistanceData[idx];
+						if (distance < bestValue)
+						{
+							bestValue = distance;
+							bestIndex = i + 1;
+						}
+					}
+				}
+
+				resultData[idx] = Convert.ToByte(bestIndex);
+			}
+
+			return result;
 		}
 
 		private static int Sum(byte[] array)
