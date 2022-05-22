@@ -15,6 +15,22 @@ namespace OpenRA.Mods.Common.Traits.BotModules
 		private Queue<CPos> updateQueue;
 		public readonly int Width, Height;
 
+		public uint[] DistanceData
+		{
+			get
+			{
+				return distanceData;
+			}
+		}
+
+		public bool[] UnpassableData
+		{
+			get
+			{
+				return unpassable;
+			}
+		}
+
 		public DistanceMap(int width, int height)
 		{
 			if (width < 1 || height < 1)
