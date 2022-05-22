@@ -212,7 +212,7 @@ namespace OpenRA.Mods.Common.Traits
 				}
 
 				dm.Solve();
-				dm.WriteToFile("obstacle-distance.map");
+				dm.WriteToFile("distance-obstacles.map");
 
 				var mcvDistances = world.Actors.Where(a => a.Info.Name == "mcv")
 				.Select(mcv =>
@@ -231,7 +231,7 @@ namespace OpenRA.Mods.Common.Traits
 
 					dm2.SetRoot(mcv.Location.X, mcv.Location.Y);
 					dm2.Solve();
-					dm2.WriteToFile("mcvdist-" + mcv.Owner.PlayerName + ".map");
+					dm2.WriteToFile("distance-mcv" + mcv.Owner.PlayerName + ".map");
 					return dm2;
 				}).ToList();
 				var territory = AssignTerritoryByDistance(mcvDistances);
