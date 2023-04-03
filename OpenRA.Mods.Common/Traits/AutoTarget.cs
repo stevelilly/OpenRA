@@ -155,7 +155,7 @@ namespace OpenRA.Mods.Common.Traits
 				return;
 
 			var oldStance = stance;
-			stance = value;
+			stance = PredictedStance = value;
 			ApplyStanceCondition(self);
 
 			foreach (var nsc in notifyStanceChanged)
@@ -206,8 +206,7 @@ namespace OpenRA.Mods.Common.Traits
 
 		void INotifyOwnerChanged.OnOwnerChanged(Actor self, Player oldOwner, Player newOwner)
 		{
-			PredictedStance = self.Owner.IsBot || !self.Owner.Playable ? Info.InitialStanceAI : Info.InitialStance;
-			SetStance(self, PredictedStance);
+			SetStance(self, self.Owner.IsBot || !self.Owner.Playable ? Info.InitialStanceAI : Info.InitialStance);
 		}
 
 		void IResolveOrder.ResolveOrder(Actor self, Order order)
@@ -255,6 +254,15 @@ namespace OpenRA.Mods.Common.Traits
 			// Don't retaliate against own units force-firing on us. It's usually not what the player wanted.
 			if (attacker.AppearsFriendlyTo(self))
 				return;
+
+			// Respect AutoAttack priorities.
+			if (stance > UnitStance.ReturnFire)
+			{
+				var autoTarget = ScanForTarget(self, allowMove, true);
+
+				if (autoTarget != Target.Invalid)
+					attacker = autoTarget.Actor;
+			}
 
 			Aggressor = attacker;
 
