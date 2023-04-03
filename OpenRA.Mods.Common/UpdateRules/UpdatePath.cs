@@ -97,6 +97,8 @@ namespace OpenRA.Mods.Common.UpdateRules
 				new UnhardcodeBaseBuilderBotModule(),
 				new UnhardcodeVeteranProductionIconOverlay(),
 				new RenameContrailProperties(),
+				new RemoveDomainIndex(),
+				new AddControlGroups(),
 			})
 		};
 

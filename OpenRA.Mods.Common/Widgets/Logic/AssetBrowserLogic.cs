@@ -129,7 +129,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			var spriteWidget = panel.GetOrNull<SpriteWidget>("SPRITE");
 			if (spriteWidget != null)
 			{
-				spriteWidget.GetSprite = () => currentSprites?[currentFrame];
+				spriteWidget.GetSprite = () => currentSprites?.Length > 0 ? currentSprites[currentFrame] : null;
 				currentPalette = spriteWidget.Palette;
 				spriteScale = spriteWidget.Scale;
 				spriteWidget.GetPalette = () => currentPalette;
@@ -226,15 +226,16 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			var frameText = panel.GetOrNull<LabelWidget>("FRAME_COUNT");
 			if (frameText != null)
 			{
-				var soundLength = new CachedTransform<int, string>(p =>
-					modData.Translation.GetString(LengthInSeconds, Translation.Arguments("length", p)));
+				var soundLength = new CachedTransform<double, string>(p =>
+					modData.Translation.GetString(LengthInSeconds, Translation.Arguments("length", Math.Round(p, 3))));
+
 				frameText.GetText = () =>
 				{
 					if (isVideoLoaded)
 						return $"{player.Video.CurrentFrameIndex + 1} / {player.Video.FrameCount}";
 
 					if (currentSoundFormat != null)
-						return soundLength.Update((int)currentSoundFormat.LengthInSeconds);
+						return soundLength.Update(currentSoundFormat.LengthInSeconds);
 
 					return $"{currentFrame} / {currentSprites.Length - 1}";
 				};
@@ -378,10 +379,10 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 			}
 
 			var assetBrowserModData = modData.Manifest.Get<AssetBrowser>();
-			allowedSpriteExtensions = assetBrowserModData.SpriteExtensions;
-			allowedModelExtensions = assetBrowserModData.ModelExtensions;
-			allowedAudioExtensions = assetBrowserModData.AudioExtensions;
-			allowedVideoExtensions = assetBrowserModData.VideoExtensions;
+			allowedSpriteExtensions = assetBrowserModData.SpriteExtensions.Select(x => x.ToLowerInvariant()).ToArray();
+			allowedModelExtensions = assetBrowserModData.ModelExtensions.Select(x => x.ToLowerInvariant()).ToArray();
+			allowedAudioExtensions = assetBrowserModData.AudioExtensions.Select(x => x.ToLowerInvariant()).ToArray();
+			allowedVideoExtensions = assetBrowserModData.VideoExtensions.Select(x => x.ToLowerInvariant()).ToArray();
 			allowedExtensions = allowedSpriteExtensions
 				.Union(allowedModelExtensions)
 				.Union(allowedAudioExtensions)
@@ -507,7 +508,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 					currentSprites = world.Map.Rules.Sequences.SpriteCache[prefix + filename];
 					currentFrame = 0;
 
-					if (frameSlider != null)
+					if (frameSlider != null && currentSprites?.Length > 0)
 					{
 						frameSlider.MaximumValue = (float)currentSprites.Length - 1;
 						frameSlider.Ticks = currentSprites.Length;
@@ -550,7 +551,7 @@ namespace OpenRA.Mods.Common.Widgets.Logic
 					if (video != null)
 					{
 						player = panel.Get<VideoPlayerWidget>("PLAYER");
-						player.Load(prefix + filename);
+						player.LoadAndPlay(prefix + filename);
 						player.DrawOverlay = false;
 						isVideoLoaded = true;
 
