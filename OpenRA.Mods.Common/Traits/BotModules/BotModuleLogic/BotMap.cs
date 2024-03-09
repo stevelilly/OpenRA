@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 {
@@ -7,7 +8,7 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 		private byte[] mapData;
 		private int width, height;
 
-		public BotMap(BuildingInfluence buildingInfluence, byte[] clientIndexMap, ResourceLayer resourceLayer, byte[] resourceTypeMap, Map worldMap, byte[] terrainTypeMap)
+		public BotMap(BuildingInfluence buildingInfluence, byte[] playerActorIdMap, IResourceLayer resourceLayer, Dictionary<string, byte> resourceTypeMap, Map worldMap, byte[] terrainTypeMap)
 		{
 			width = worldMap.Bounds.Width;
 			height = worldMap.Bounds.Height;
@@ -18,16 +19,15 @@ namespace OpenRA.Mods.Common.Traits.BotModules.BotModuleLogic
 				for (int x = 1; x <= width; x++, i++)
 				{
 					CPos pos = new CPos(x, y);
-					ResourceType resourceType;
+					ResourceLayerContents resourceLayerContents = resourceLayer.GetResource(pos);
 					Actor building;
-					if ((resourceType = resourceLayer.GetResourceType(pos)) != null)
+					if (!resourceLayerContents.Equals(ResourceLayerContents.Empty))
 					{
-						int resourceTypeIndex = resourceType.Info.ResourceType;
-						mapData[i] = resourceTypeMap[resourceTypeIndex];
+						mapData[i] = resourceTypeMap[resourceLayerContents.Type];
 					}
-					else if ((building = buildingInfluence.GetBuildingAt(pos)) != null)
+					else if ((building = buildingInfluence.GetBuildingsAt(pos).FirstOrDefault()) != null)
 					{
-						mapData[i] = clientIndexMap[building.Owner.ClientIndex];
+						mapData[i] = playerActorIdMap[building.Owner.PlayerActor.ActorID];
 					}
 					else
 					{

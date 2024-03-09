@@ -128,10 +128,14 @@ namespace OpenRA.Mods.Common.Traits
 				Log("What is {0}?".F(type));
 				return 0;
 			});
-			byte[] resourceTypeMap = BuildResourceTypeMap(type => 2);
-			byte[] clientIndexMap = BuildPlayerClientIndexMap(world.Players, playerIndex => Convert.ToByte(3 + playerIndex));
+			Dictionary<string, byte> resourceTypeMap = new Dictionary<string, byte>()
+			{
+				["Ore" ] = 1,
+				["Gems"] = 1,
+			};
+			byte[] playerActorIdMap = BuildPlayerActorIdMap(world.Players, playerIndex => Convert.ToByte(3 + playerIndex));
 
-			var botMap = new BotMap(buildingInfluence, clientIndexMap, resourceLayer, resourceTypeMap, world.Map, terrainTypeMap);
+			var botMap = new BotMap(buildingInfluence, playerActorIdMap, resourceLayer, resourceTypeMap, world.Map, terrainTypeMap);
 
 			byte myBuildings = Convert.ToByte(3 + world.Players.IndexOf(player));
 			CPos[] myBuildingCells = botMap.CollectCoordinates(myBuildings);
@@ -148,11 +152,11 @@ namespace OpenRA.Mods.Common.Traits
 
 		private byte[] BuildTerrainTypeMap(Map map, Func<string, byte> mapFunc)
 		{
-			var terainInfo = map.Rules.TileSet.TerrainInfo;
-			var result = new byte[terainInfo.Length];
-			for (int i = 0; i < result.Length; i++)
+			TerrainTypeInfo[] terrainTypeInfo = map.Rules.TerrainInfo.TerrainTypes;
+			var result = new byte[terrainTypeInfo.Length];
+			for (int i = 0; i < terrainTypeInfo.Length; i++)
 			{
-				result[i] = mapFunc(terainInfo[i].Type);
+				result[i] = mapFunc(terrainTypeInfo[i].Type);
 			}
 
 			return result;
@@ -164,14 +168,14 @@ namespace OpenRA.Mods.Common.Traits
 			return new byte[] { 0, 1, 1 };
 		}
 
-		private byte[] BuildPlayerClientIndexMap(Player[] players, Func<int, byte> mapFunc)
+		private byte[] BuildPlayerActorIdMap(Player[] players, Func<int, byte> mapFunc)
 		{
 			// clientIndex may not have the same bounds as player index
 			// but there are neutral players, so players.Length > numClients ?
-			byte[] result = new byte[players.Length];
-			for (int i = 0; i < result.Length; i++)
+			byte[] result = new byte[players.Length + 1];
+			for (int i = 0; i < players.Length; i++)
 			{
-				result[players[i].ClientIndex] = mapFunc(i);
+				result[players[i].PlayerActor.ActorID] = mapFunc(i);
 			}
 
 			return result;
