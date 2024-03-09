@@ -35,7 +35,7 @@ namespace OpenRA.Test.OpenRA.Mods.Common.Traits.BotModules
 			}
 			catch (ArgumentOutOfRangeException e)
 			{
-				if (e.Message != "array lengths differ, should be 1 was 2\r\nParameter name: rhs")
+				if (e.Message != "array lengths differ, should be 1 was 2 (Parameter 'rhs')")
 					Assert.Fail("message did not match, got " + e.Message);
 			}
 		}
