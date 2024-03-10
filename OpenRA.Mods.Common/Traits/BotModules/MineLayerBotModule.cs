@@ -183,8 +183,8 @@ namespace OpenRA.Mods.Common.Traits
 			});
 			Dictionary<string, byte> resourceTypeMap = new Dictionary<string, byte>()
 			{
-				["Ore"] = 1,
-				["Gems"] = 1,
+				["Ore"] = 169,
+				["Gems"] = 170,
 			};
 			byte[] playerActorIdMap = BuildPlayerActorIdMap(world.Players, playerIndex => Convert.ToByte(3 + playerIndex));
 
